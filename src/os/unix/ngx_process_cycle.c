@@ -695,6 +695,7 @@ ngx_master_process_exit(ngx_cycle_t *cycle)
 }
 
 
+/* 工作进程的主循环 */
 static void
 ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
 {
@@ -718,6 +719,7 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
 
         ngx_log_debug0(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "worker cycle");
 
+        /* 等待事件与定时器超时 */
         ngx_process_events_and_timers(cycle);
 
         if (ngx_terminate) {

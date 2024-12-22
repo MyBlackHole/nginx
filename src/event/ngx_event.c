@@ -202,6 +202,7 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
         flags = 0;
 
     } else {
+        /* 获取 wait 超时时间 */
         timer = ngx_event_find_timer();
         flags = NGX_UPDATE_TIME;
 
@@ -245,6 +246,7 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
 
     delta = ngx_current_msec;
 
+    /* ngx_epoll_process_events */
     (void) ngx_process_events(cycle, timer, flags);
 
     delta = ngx_current_msec - delta;
@@ -252,14 +254,17 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
     ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
                    "timer delta: %M", delta);
 
+    /* 处理延迟 accept 事件? */
     ngx_event_process_posted(cycle, &ngx_posted_accept_events);
 
     if (ngx_accept_mutex_held) {
         ngx_shmtx_unlock(&ngx_accept_mutex);
     }
 
+    /* 消费掉到期定时器事件 */
     ngx_event_expire_timers();
 
+    /* 处理延迟事件? */
     ngx_event_process_posted(cycle, &ngx_posted_events);
 }
 

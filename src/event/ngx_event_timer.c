@@ -29,6 +29,7 @@ ngx_event_timer_init(ngx_log_t *log)
 }
 
 
+/* 获取距离下次定时器事件的最小时间间隔 */
 ngx_msec_t
 ngx_event_find_timer(void)
 {
@@ -49,7 +50,7 @@ ngx_event_find_timer(void)
     return (ngx_msec_t) (timer > 0 ? timer : 0);
 }
 
-
+/* 处理定时器事件 */
 void
 ngx_event_expire_timers(void)
 {
@@ -70,15 +71,18 @@ ngx_event_expire_timers(void)
         /* node->key > ngx_current_msec */
 
         if ((ngx_msec_int_t) (node->key - ngx_current_msec) > 0) {
+            /* 没有到期的定时器 */
             return;
         }
 
+        /* 到期的定时器, 取出 ev */
         ev = ngx_rbtree_data(node, ngx_event_t, timer);
 
         ngx_log_debug2(NGX_LOG_DEBUG_EVENT, ev->log, 0,
                        "event timer del: %d: %M",
                        ngx_event_ident(ev->data), ev->timer.key);
 
+        /* 删除定时器 */
         ngx_rbtree_delete(&ngx_event_timer_rbtree, &ev->timer);
 
 #if (NGX_DEBUG)
@@ -91,6 +95,7 @@ ngx_event_expire_timers(void)
 
         ev->timedout = 1;
 
+        /* 调用事件处理函数 */
         ev->handler(ev);
     }
 }

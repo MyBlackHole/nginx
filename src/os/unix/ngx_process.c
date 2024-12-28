@@ -32,10 +32,11 @@ char           **ngx_os_argv;
 
 ngx_int_t        ngx_process_slot;
 ngx_socket_t     ngx_channel;
+/* ngx_spawn_process */
 ngx_int_t        ngx_last_process;
 ngx_process_t    ngx_processes[NGX_MAX_PROCESSES];
 
-
+/* 信号处理定义 */
 ngx_signal_t  signals[] = {
     { ngx_signal_value(NGX_RECONFIGURE_SIGNAL),
       "SIG" ngx_value(NGX_RECONFIGURE_SIGNAL),
@@ -82,7 +83,7 @@ ngx_signal_t  signals[] = {
     { 0, NULL, "", NULL }
 };
 
-
+/* fork 子进程 */
 ngx_pid_t
 ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
     char *name, ngx_int_t respawn)
@@ -250,6 +251,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
         break;
     }
 
+    /* 递增当前正在处理的进程数 */
     if (s == ngx_last_process) {
         ngx_last_process++;
     }
@@ -280,7 +282,7 @@ ngx_execute_proc(ngx_cycle_t *cycle, void *data)
     exit(1);
 }
 
-
+/* 初始化信号 */
 ngx_int_t
 ngx_init_signals(ngx_log_t *log)
 {
@@ -314,7 +316,7 @@ ngx_init_signals(ngx_log_t *log)
     return NGX_OK;
 }
 
-
+/* 信号处理函数 */
 static void
 ngx_signal_handler(int signo, siginfo_t *siginfo, void *ucontext)
 {
@@ -460,6 +462,7 @@ ngx_signal_handler(int signo, siginfo_t *siginfo, void *ucontext)
     }
 
     if (signo == SIGCHLD) {
+        /* 存在子进程退出 */
         ngx_process_get_status();
     }
 
@@ -467,6 +470,7 @@ ngx_signal_handler(int signo, siginfo_t *siginfo, void *ucontext)
 }
 
 
+/* 获取子进程状态 */
 static void
 ngx_process_get_status(void)
 {
@@ -480,6 +484,7 @@ ngx_process_get_status(void)
     one = 0;
 
     for ( ;; ) {
+        /* 回收僵尸进程 */
         pid = waitpid(-1, &status, WNOHANG);
 
         if (pid == 0) {
@@ -553,6 +558,7 @@ ngx_process_get_status(void)
                           "%s %P exited with fatal code %d "
                           "and cannot be respawned",
                           process, pid, WEXITSTATUS(status));
+            /* 退出状态码为2的进程不能被重启 */
             ngx_processes[i].respawn = 0;
         }
 

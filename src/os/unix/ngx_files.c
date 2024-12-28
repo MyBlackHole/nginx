@@ -79,6 +79,7 @@ ngx_read_file(ngx_file_t *file, u_char *buf, size_t size, off_t offset)
 
 typedef struct {
     ngx_fd_t       fd;
+    /* 标记是读还是写, 0为读,1为写 */
     ngx_uint_t     write;   /* unsigned  write:1; */
 
     u_char        *buf;

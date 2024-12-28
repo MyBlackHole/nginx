@@ -35,6 +35,10 @@ struct ngx_listening_s {
 #endif
 
     /* handler of accepted connection */
+    /*
+     * ngx_http_init_connection
+     * ngx_stream_init_connection
+     */
     ngx_connection_handler_pt   handler;
 
     void               *servers;  /* array of ngx_http_in_addr_t, for example */

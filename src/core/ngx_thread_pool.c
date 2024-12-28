@@ -28,14 +28,18 @@ typedef struct {
 
 struct ngx_thread_pool_s {
     ngx_thread_mutex_t        mtx;
+    /* 任务队列 */
     ngx_thread_pool_queue_t   queue;
+    /* 等待中的任务数量 */
     ngx_int_t                 waiting;
     ngx_thread_cond_t         cond;
 
     ngx_log_t                *log;
 
     ngx_str_t                 name;
+    /* 线程数量 */
     ngx_uint_t                threads;
+    /* 最大任务队列长度 */
     ngx_int_t                 max_queue;
 
     u_char                   *file;
@@ -98,11 +102,14 @@ ngx_module_t  ngx_thread_pool_module = {
 
 static ngx_str_t  ngx_thread_pool_default = ngx_string("default");
 
+/* 全局任务 ID 计数器 */
 static ngx_uint_t               ngx_thread_pool_task_id;
+/* 已完成的任务队列操作锁 */
 static ngx_atomic_t             ngx_thread_pool_done_lock;
+/* 已完成的任务队列 */
 static ngx_thread_pool_queue_t  ngx_thread_pool_done;
 
-
+/* 线程池初始化 */
 static ngx_int_t
 ngx_thread_pool_init(ngx_thread_pool_t *tp, ngx_log_t *log, ngx_pool_t *pool)
 {
@@ -117,6 +124,7 @@ ngx_thread_pool_init(ngx_thread_pool_t *tp, ngx_log_t *log, ngx_pool_t *pool)
         return NGX_ERROR;
     }
 
+    /* 进行一系列的初始化操作 */
     ngx_thread_pool_queue_init(&tp->queue);
 
     if (ngx_thread_mutex_create(&tp->mtx, log) != NGX_OK) {
@@ -153,6 +161,7 @@ ngx_thread_pool_init(ngx_thread_pool_t *tp, ngx_log_t *log, ngx_pool_t *pool)
     }
 #endif
 
+    /* 创建线程 */
     for (n = 0; n < tp->threads; n++) {
         err = pthread_create(&tid, &attr, ngx_thread_pool_cycle, tp);
         if (err) {
@@ -167,7 +176,7 @@ ngx_thread_pool_init(ngx_thread_pool_t *tp, ngx_log_t *log, ngx_pool_t *pool)
     return NGX_OK;
 }
 
-
+/* 线程池销毁 */
 static void
 ngx_thread_pool_destroy(ngx_thread_pool_t *tp)
 {
@@ -180,6 +189,7 @@ ngx_thread_pool_destroy(ngx_thread_pool_t *tp)
     task.handler = ngx_thread_pool_exit_handler;
     task.ctx = (void *) &lock;
 
+    /* 向线程池中发送退出任务 */
     for (n = 0; n < tp->threads; n++) {
         lock = 1;
 
@@ -199,7 +209,7 @@ ngx_thread_pool_destroy(ngx_thread_pool_t *tp)
     (void) ngx_thread_mutex_destroy(&tp->mtx, tp->log);
 }
 
-
+/* 线程池退出处理 */
 static void
 ngx_thread_pool_exit_handler(void *data, ngx_log_t *log)
 {
@@ -210,7 +220,7 @@ ngx_thread_pool_exit_handler(void *data, ngx_log_t *log)
     pthread_exit(0);
 }
 
-
+/* 分配 ngx_thread_task_s 与 ngx_thread_file_ctx_t */
 ngx_thread_task_t *
 ngx_thread_task_alloc(ngx_pool_t *pool, size_t size)
 {
@@ -226,7 +236,7 @@ ngx_thread_task_alloc(ngx_pool_t *pool, size_t size)
     return task;
 }
 
-
+/* 向线程池中添加任务 */
 ngx_int_t
 ngx_thread_task_post(ngx_thread_pool_t *tp, ngx_thread_task_t *task)
 {
@@ -240,6 +250,7 @@ ngx_thread_task_post(ngx_thread_pool_t *tp, ngx_thread_task_t *task)
         return NGX_ERROR;
     }
 
+    /* 任务队列满了 */
     if (tp->waiting >= tp->max_queue) {
         (void) ngx_thread_mutex_unlock(&tp->mtx, tp->log);
 
@@ -249,16 +260,19 @@ ngx_thread_task_post(ngx_thread_pool_t *tp, ngx_thread_task_t *task)
         return NGX_ERROR;
     }
 
+    /* 标记任务为活动 */
     task->event.active = 1;
 
     task->id = ngx_thread_pool_task_id++;
     task->next = NULL;
 
+    /* 唤醒空闲线程有任务需要处理 */
     if (ngx_thread_cond_signal(&tp->cond, tp->log) != NGX_OK) {
         (void) ngx_thread_mutex_unlock(&tp->mtx, tp->log);
         return NGX_ERROR;
     }
 
+    /* 加入任务队列 */
     *tp->queue.last = task;
     tp->queue.last = &task->next;
 
@@ -311,7 +325,9 @@ ngx_thread_pool_cycle(void *data)
         /* the number may become negative */
         tp->waiting--;
 
+        /* 任务队列为空 */
         while (tp->queue.first == NULL) {
+            /* 等待任务队列有任务, 唤醒空闲线程 */
             if (ngx_thread_cond_wait(&tp->cond, &tp->mtx, tp->log)
                 != NGX_OK)
             {
@@ -320,6 +336,7 @@ ngx_thread_pool_cycle(void *data)
             }
         }
 
+        /* 取出任务 */
         task = tp->queue.first;
         tp->queue.first = task->next;
 
@@ -339,6 +356,7 @@ ngx_thread_pool_cycle(void *data)
                        "run task #%ui in thread pool \"%V\"",
                        task->id, &tp->name);
 
+        /* 运行移除堵塞任务 */
         task->handler(task->ctx, tp->log);
 
         ngx_log_debug2(NGX_LOG_DEBUG_CORE, tp->log, 0,
@@ -349,6 +367,7 @@ ngx_thread_pool_cycle(void *data)
 
         ngx_spinlock(&ngx_thread_pool_done_lock, 1, 2048);
 
+        /* 加入已完成任务队列 */
         *ngx_thread_pool_done.last = task;
         ngx_thread_pool_done.last = &task->next;
 
@@ -356,11 +375,15 @@ ngx_thread_pool_cycle(void *data)
 
         ngx_unlock(&ngx_thread_pool_done_lock);
 
+        /*
+         * 通过写 notify_fd 通知等待读 notify_fd 的事件,
+         * 然后异步执行 ngx_thread_pool_handler 处理已完成的任务
+         */
         (void) ngx_notify(ngx_thread_pool_handler);
     }
 }
 
-
+/* 处理线程池已完成的任务 */
 static void
 ngx_thread_pool_handler(ngx_event_t *ev)
 {
@@ -379,6 +402,7 @@ ngx_thread_pool_handler(ngx_event_t *ev)
 
     ngx_unlock(&ngx_thread_pool_done_lock);
 
+    /* 处理已完成的任务 */
     while (task) {
         ngx_log_debug1(NGX_LOG_DEBUG_CORE, ev->log, 0,
                        "run completion handler for task #%ui", task->id);
@@ -612,7 +636,7 @@ ngx_thread_pool_init_worker(ngx_cycle_t *cycle)
     return NGX_OK;
 }
 
-
+/* 退出worker进程时，销毁所有线程池 */
 static void
 ngx_thread_pool_exit_worker(ngx_cycle_t *cycle)
 {

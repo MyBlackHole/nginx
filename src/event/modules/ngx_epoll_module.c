@@ -427,7 +427,7 @@ ngx_epoll_notify_init(ngx_log_t *log)
     return NGX_OK;
 }
 
-
+/* 完成任务，通知处理 */
 static void
 ngx_epoll_notify_handler(ngx_event_t *ev)
 {
@@ -760,7 +760,7 @@ ngx_epoll_del_connection(ngx_connection_t *c, ngx_uint_t flags)
 
 
 #if (NGX_HAVE_EVENTFD)
-
+/* 通知处理 */
 static ngx_int_t
 ngx_epoll_notify(ngx_event_handler_pt handler)
 {
@@ -880,6 +880,7 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
         }
 #endif
 
+        /* 读事件 */
         if ((revents & EPOLLIN) && rev->active) {
 
 #if (NGX_HAVE_EPOLLRDHUP)
@@ -904,6 +905,7 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
 
         wev = c->write;
 
+        /* 写事件 */
         if ((revents & EPOLLOUT) && wev->active) {
 
             if (c->fd == -1 || wev->instance != instance) {
@@ -924,9 +926,11 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
 #endif
 
             if (flags & NGX_POST_EVENTS) {
+                /* 滞后处理事件 */
                 ngx_post_event(wev, &ngx_posted_events);
 
             } else {
+                /* 立即处理 */
                 wev->handler(wev);
             }
         }

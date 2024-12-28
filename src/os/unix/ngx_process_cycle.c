@@ -127,6 +127,7 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
 
     ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
 
+    /* 启动工作进程 */
     ngx_start_worker_processes(cycle, ccf->worker_processes,
                                NGX_PROCESS_RESPAWN);
     ngx_start_cache_manager_processes(cycle, 0);
@@ -171,6 +172,7 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
             ngx_reap = 0;
             ngx_log_debug0(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "reap children");
 
+            /* 处理退出的子进程 */
             live = ngx_reap_children(cycle);
         }
 
@@ -274,7 +276,7 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
     }
 }
 
-
+/* 单例进程 */
 void
 ngx_single_process_cycle(ngx_cycle_t *cycle)
 {
@@ -331,7 +333,9 @@ ngx_single_process_cycle(ngx_cycle_t *cycle)
     }
 }
 
-
+/*
+ * 启动 n 个工作进程
+ */
 static void
 ngx_start_worker_processes(ngx_cycle_t *cycle, ngx_int_t n, ngx_int_t type)
 {
@@ -391,7 +395,7 @@ ngx_start_cache_manager_processes(ngx_cycle_t *cycle, ngx_uint_t respawn)
     ngx_pass_open_channel(cycle);
 }
 
-
+/* 建立父子进程间通信通道 */
 static void
 ngx_pass_open_channel(ngx_cycle_t *cycle)
 {
@@ -530,6 +534,7 @@ ngx_signal_worker_processes(ngx_cycle_t *cycle, int signo)
 }
 
 
+/* 处理回收的子进程 */
 static ngx_uint_t
 ngx_reap_children(ngx_cycle_t *cycle)
 {
@@ -595,6 +600,7 @@ ngx_reap_children(ngx_cycle_t *cycle)
                 && !ngx_terminate
                 && !ngx_quit)
             {
+                /* 恢复工作进程 */
                 if (ngx_spawn_process(cycle, ngx_processes[i].proc,
                                       ngx_processes[i].data,
                                       ngx_processes[i].name, i)

@@ -100,6 +100,26 @@ struct ngx_event_s {
 
     int              available;
 
+    /*
+     * ngx_event_accept
+     * ngx_event_recvmsg
+     *
+     * ngx_channel_handler
+     *
+     * http:
+     * ngx_http_request_handler
+     * ngx_http_empty_handler
+     * ngx_http_process_request_line
+     * ngx_http_lingering_close_handler
+     *
+     * ngx_http_wait_request_handler
+     * ngx_http_empty_handler
+     *
+     * ngx_http_cache_thread_event_handler
+     *
+     * stream:
+     * ngx_stream_session_handler
+     */
     ngx_event_handler_pt  handler;
 
 
@@ -164,17 +184,18 @@ struct ngx_event_aio_s {
 
 
 typedef struct {
+    /*ngx_epoll_add_event*/
     ngx_int_t  (*add)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
     ngx_int_t  (*del)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
 
     ngx_int_t  (*enable)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
     ngx_int_t  (*disable)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
-
+    /*ngx_epoll_add_connection*/
     ngx_int_t  (*add_conn)(ngx_connection_t *c);
     ngx_int_t  (*del_conn)(ngx_connection_t *c, ngx_uint_t flags);
 
     ngx_int_t  (*notify)(ngx_event_handler_pt handler);
-
+    /*ngx_epoll_process_events*/
     ngx_int_t  (*process_events)(ngx_cycle_t *cycle, ngx_msec_t timer,
                                  ngx_uint_t flags);
 
@@ -397,20 +418,22 @@ extern ngx_uint_t            ngx_use_epoll_rdhup;
 #endif
 
 
+/* ngx_epoll_process_events */
 #define ngx_process_events   ngx_event_actions.process_events
 #define ngx_done_events      ngx_event_actions.done
-
+/* ngx_epoll_add_event */
 #define ngx_add_event        ngx_event_actions.add
 #define ngx_del_event        ngx_event_actions.del
 #define ngx_add_conn         ngx_event_actions.add_conn
 #define ngx_del_conn         ngx_event_actions.del_conn
-
+/* ngx_epoll_notify */
 #define ngx_notify           ngx_event_actions.notify
 
 #define ngx_add_timer        ngx_event_add_timer
 #define ngx_del_timer        ngx_event_del_timer
 
 
+/* ngx_os_io */
 extern ngx_os_io_t  ngx_io;
 
 #define ngx_recv             ngx_io.recv

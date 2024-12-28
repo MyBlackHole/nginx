@@ -15,6 +15,7 @@
 
 typedef struct {
     void        *elts;
+    /* 线程池数量 */
     ngx_uint_t   nelts;
     size_t       size;
     ngx_uint_t   nalloc;

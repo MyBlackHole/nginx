@@ -13,11 +13,14 @@
 #include <ngx_core.h>
 #include <ngx_event.h>
 
-
+/* ngx_thread_task_s 与 ngx_thread_file_ctx_t 共同分配内存, ctx 跟随在 task 后 */
 struct ngx_thread_task_s {
     ngx_thread_task_t   *next;
     ngx_uint_t           id;
     void                *ctx;
+    /* ngx_thread_pool_exit_handler: 用来退出线程 */
+    /* ngx_thread_read_handler: 用来读取数据 */
+    /* ngx_thread_write_chain_to_file_handler: 用来写数据到文件 */
     void               (*handler)(void *data, ngx_log_t *log);
     ngx_event_t          event;
 };

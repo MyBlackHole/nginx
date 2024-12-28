@@ -327,6 +327,7 @@ main(int argc, char *const *argv)
     }
 
     if (ngx_signal) {
+        /* 这是什么意思? */
         return ngx_signal_process(cycle, ngx_signal);
     }
 
@@ -342,6 +343,10 @@ main(int argc, char *const *argv)
 
 #if !(NGX_WIN32)
 
+    /*
+     * 信号处理初始化
+     * 子进程回收也是在信号处理函数处理的(内部调用 waitpid)
+     */
     if (ngx_init_signals(cycle->log) != NGX_OK) {
         return 1;
     }

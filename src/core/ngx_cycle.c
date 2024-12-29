@@ -34,7 +34,7 @@ ngx_uint_t             ngx_quiet_mode;
 static ngx_connection_t  dumb;
 /* STUB */
 
-
+/* 循环结构初始化 */
 ngx_cycle_t *
 ngx_init_cycle(ngx_cycle_t *old_cycle)
 {
@@ -222,12 +222,14 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     ngx_strlow(cycle->hostname.data, (u_char *) hostname, cycle->hostname.len);
 
 
+    /* 获取支持的模块 */
     if (ngx_cycle_modules(cycle) != NGX_OK) {
         ngx_destroy_pool(pool);
         return NULL;
     }
 
 
+    /* 核心模块创建配置 */
     for (i = 0; cycle->modules[i]; i++) {
         if (cycle->modules[i]->type != NGX_CORE_MODULE) {
             continue;
@@ -292,6 +294,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
                        cycle->conf_file.data);
     }
 
+    /* 核心模块初始化配置 */
     for (i = 0; cycle->modules[i]; i++) {
         if (cycle->modules[i]->type != NGX_CORE_MODULE) {
             continue;
@@ -508,6 +511,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
     /* handle the listening sockets */
 
+    /* 处理旧的监听套接字 */
     if (old_cycle->listening.nelts) {
         ls = old_cycle->listening.elts;
         for (i = 0; i < old_cycle->listening.nelts; i++) {
@@ -621,6 +625,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         }
     }
 
+    /* 打开套接字监听 */
     if (ngx_open_listening_sockets(cycle) != NGX_OK) {
         goto failed;
     }
@@ -638,6 +643,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
     pool->log = cycle->log;
 
+    /* 执行所有模块的初始化函数 */
     if (ngx_init_modules(cycle) != NGX_OK) {
         /* fatal */
         exit(1);
@@ -927,6 +933,7 @@ failed:
         return NULL;
     }
 
+    /* 回滚监听套接字 */
     ls = cycle->listening.elts;
     for (i = 0; i < cycle->listening.nelts; i++) {
         if (ls[i].fd == (ngx_socket_t) -1 || !ls[i].open) {

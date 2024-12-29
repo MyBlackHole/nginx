@@ -49,6 +49,7 @@ struct ngx_cycle_s {
     ngx_connection_t         *free_connections;
     ngx_uint_t                free_connection_n;
 
+    /* ngx_modules */
     ngx_module_t            **modules;
     ngx_uint_t                modules_n;
     ngx_uint_t                modules_used;    /* unsigned  modules_used:1; */
@@ -57,6 +58,7 @@ struct ngx_cycle_s {
     ngx_uint_t                reusable_connections_n;
     time_t                    connections_reuse_time;
 
+    /* 监听套接字数组 */
     ngx_array_t               listening;
     ngx_array_t               paths;
 

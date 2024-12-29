@@ -36,10 +36,13 @@ ngx_pid_t     ngx_parent;
 sig_atomic_t  ngx_reap;
 sig_atomic_t  ngx_sigio;
 sig_atomic_t  ngx_sigalrm;
+/* 终止状态 */
 sig_atomic_t  ngx_terminate;
+/* 退出状态 */
 sig_atomic_t  ngx_quit;
 sig_atomic_t  ngx_debug_quit;
 ngx_uint_t    ngx_exiting;
+/* 重新配置状态 */
 sig_atomic_t  ngx_reconfigure;
 sig_atomic_t  ngx_reopen;
 
@@ -302,13 +305,14 @@ ngx_single_process_cycle(ngx_cycle_t *cycle)
         ngx_process_events_and_timers(cycle);
 
         if (ngx_terminate || ngx_quit) {
-
+            /* 所有模块执行退出处理函数 */
             for (i = 0; cycle->modules[i]; i++) {
                 if (cycle->modules[i]->exit_process) {
                     cycle->modules[i]->exit_process(cycle);
                 }
             }
 
+            /* 退出 */
             ngx_master_process_exit(cycle);
         }
 
@@ -657,7 +661,7 @@ ngx_reap_children(ngx_cycle_t *cycle)
     return live;
 }
 
-
+/* 退出主进程 */
 static void
 ngx_master_process_exit(ngx_cycle_t *cycle)
 {
@@ -719,6 +723,7 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
         if (ngx_exiting) {
             if (ngx_event_no_timers_left() == NGX_OK) {
                 ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "exiting");
+                /* 工作进程退出 */
                 ngx_worker_process_exit(cycle);
             }
         }
@@ -730,6 +735,7 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
 
         if (ngx_terminate) {
             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "exiting");
+            /* 工作进程退出 */
             ngx_worker_process_exit(cycle);
         }
 
@@ -950,6 +956,7 @@ ngx_worker_process_exit(ngx_cycle_t *cycle)
     ngx_uint_t         i;
     ngx_connection_t  *c;
 
+    /* 所有模块执行退出处理函数 */
     for (i = 0; cycle->modules[i]; i++) {
         if (cycle->modules[i]->exit_process) {
             cycle->modules[i]->exit_process(cycle);

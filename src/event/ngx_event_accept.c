@@ -361,7 +361,7 @@ ngx_trylock_accept_mutex(ngx_cycle_t *cycle)
     return NGX_OK;
 }
 
-
+/* 启用连接监听事件 */
 ngx_int_t
 ngx_enable_accept_events(ngx_cycle_t *cycle)
 {
@@ -387,6 +387,7 @@ ngx_enable_accept_events(ngx_cycle_t *cycle)
 }
 
 
+/* 禁用连接监听事件 */
 static ngx_int_t
 ngx_disable_accept_events(ngx_cycle_t *cycle, ngx_uint_t all)
 {

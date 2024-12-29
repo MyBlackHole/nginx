@@ -9,6 +9,7 @@
 #include <ngx_core.h>
 
 
+/* 数组创建 */
 ngx_array_t *
 ngx_array_create(ngx_pool_t *p, ngx_uint_t n, size_t size)
 {

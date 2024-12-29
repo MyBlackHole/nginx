@@ -14,9 +14,11 @@
 
 
 typedef struct {
+    /* 数组元素的指针 */
     void        *elts;
-    /* 线程池数量 */
+    /* 数组元素的指针数量 */
     ngx_uint_t   nelts;
+    /* 数组元素的大小 */
     size_t       size;
     ngx_uint_t   nalloc;
     ngx_pool_t  *pool;

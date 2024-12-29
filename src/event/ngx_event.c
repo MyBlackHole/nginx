@@ -807,6 +807,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     /* for each listening socket */
 
     ls = cycle->listening.elts;
+    /* 给所有监听套接字添加读事件 */
     for (i = 0; i < cycle->listening.nelts; i++) {
 
 #if (NGX_HAVE_REUSEPORT)

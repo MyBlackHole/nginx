@@ -403,6 +403,7 @@ ngx_set_inherited_sockets(ngx_cycle_t *cycle)
 }
 
 
+/* 打开监听套接字 */
 ngx_int_t
 ngx_open_listening_sockets(ngx_cycle_t *cycle)
 {
@@ -427,6 +428,7 @@ ngx_open_listening_sockets(ngx_cycle_t *cycle)
 
         /* for each listening socket */
 
+        /* 遍历打开套接字监听 */
         ls = cycle->listening.elts;
         for (i = 0; i < cycle->listening.nelts; i++) {
 
@@ -1091,7 +1093,7 @@ ngx_configure_listening_sockets(ngx_cycle_t *cycle)
     return;
 }
 
-
+/* 关闭监听套接字数组 */
 void
 ngx_close_listening_sockets(ngx_cycle_t *cycle)
 {

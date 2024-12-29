@@ -18,10 +18,12 @@ static ngx_uint_t ngx_module_ctx_index(ngx_cycle_t *cycle, ngx_uint_t type,
     ngx_uint_t index);
 
 
+/* 最大模块数量 */
 ngx_uint_t         ngx_max_module;
+/* 模块数量 */
 static ngx_uint_t  ngx_modules_n;
 
-
+/* 计算模块数量 */
 ngx_int_t
 ngx_preinit_modules(void)
 {
@@ -38,7 +40,7 @@ ngx_preinit_modules(void)
     return NGX_OK;
 }
 
-
+/* nginx 循环获取支持的模块 */
 ngx_int_t
 ngx_cycle_modules(ngx_cycle_t *cycle)
 {
@@ -61,7 +63,7 @@ ngx_cycle_modules(ngx_cycle_t *cycle)
     return NGX_OK;
 }
 
-
+/* 执行模块自己定义的初始化函数 */
 ngx_int_t
 ngx_init_modules(ngx_cycle_t *cycle)
 {

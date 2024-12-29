@@ -50,6 +50,7 @@ struct ngx_listening_s {
     /* should be here because of the AcceptEx() preread */
     size_t              post_accept_buffer_size;
 
+    /* 重载后，可能此监听器的配置项发生变化 */
     ngx_listening_t    *previous;
     ngx_connection_t   *connection;
 

@@ -131,6 +131,7 @@ struct ngx_connection_s {
     ngx_event_t        *read;
     ngx_event_t        *write;
 
+    /* 对应的套接字 */
     ngx_socket_t        fd;
 
     ngx_recv_pt         recv;

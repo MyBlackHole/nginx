@@ -47,6 +47,7 @@ struct ngx_cycle_s {
 
     ngx_connection_t        **files;
     ngx_connection_t         *free_connections;
+    /* 初始化时等于 connection_n */
     ngx_uint_t                free_connection_n;
 
     /* ngx_modules */
@@ -69,9 +70,15 @@ struct ngx_cycle_s {
     ngx_list_t                open_files;
     ngx_list_t                shared_memory;
 
+    /* 连接数 */
     ngx_uint_t                connection_n;
     ngx_uint_t                files_n;
 
+    /* 以下
+     * connections
+     * read_events
+     * write_events
+     * 数量等于 connection_n */
     ngx_connection_t         *connections;
     ngx_event_t              *read_events;
     ngx_event_t              *write_events;

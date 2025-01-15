@@ -246,7 +246,9 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
 
     delta = ngx_current_msec;
 
-    /* ngx_epoll_process_events */
+    /*
+     * 进入事件处理流程
+     * 例如：ngx_epoll_process_events */
     (void) ngx_process_events(cycle, timer, flags);
 
     delta = ngx_current_msec - delta;
@@ -756,6 +758,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 
 #endif
 
+    /* 分配连接对象数组空间 */
     cycle->connections =
         ngx_alloc(sizeof(ngx_connection_t) * cycle->connection_n, cycle->log);
     if (cycle->connections == NULL) {
@@ -764,24 +767,28 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 
     c = cycle->connections;
 
+    /* 分配读事件数组空间 */
     cycle->read_events = ngx_alloc(sizeof(ngx_event_t) * cycle->connection_n,
                                    cycle->log);
     if (cycle->read_events == NULL) {
         return NGX_ERROR;
     }
 
+    /* 初始化读事件数组 */
     rev = cycle->read_events;
     for (i = 0; i < cycle->connection_n; i++) {
         rev[i].closed = 1;
         rev[i].instance = 1;
     }
 
+    /* 分配写事件数组空间 */
     cycle->write_events = ngx_alloc(sizeof(ngx_event_t) * cycle->connection_n,
                                     cycle->log);
     if (cycle->write_events == NULL) {
         return NGX_ERROR;
     }
 
+    /* 初始化写事件数组 */
     wev = cycle->write_events;
     for (i = 0; i < cycle->connection_n; i++) {
         wev[i].closed = 1;
@@ -790,6 +797,13 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     i = cycle->connection_n;
     next = NULL;
 
+    /*
+     * 给所有连接对象添加读写事件
+     * 初始化链表结构
+     *
+     * c1 -> c2 -> c3 -> c4 -> c5 -> c6 -> c7 -> c8 -> c9 -> c10 -> NULL
+     *
+     */
     do {
         i--;
 

@@ -779,7 +779,7 @@ ngx_epoll_notify(ngx_event_handler_pt handler)
 
 #endif
 
-
+/* ngx_process_events_and_timers 函数会调用 ngx_epoll_process_events 函数 */
 static ngx_int_t
 ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
 {

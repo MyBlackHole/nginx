@@ -1172,7 +1172,7 @@ ngx_close_listening_sockets(ngx_cycle_t *cycle)
     cycle->listening.nelts = 0;
 }
 
-
+/* 获取连接对象 */
 ngx_connection_t *
 ngx_get_connection(ngx_socket_t s, ngx_log_t *log)
 {
@@ -1238,7 +1238,7 @@ ngx_get_connection(ngx_socket_t s, ngx_log_t *log)
     return c;
 }
 
-
+/* 回收连接对象 */
 void
 ngx_free_connection(ngx_connection_t *c)
 {
@@ -1251,7 +1251,7 @@ ngx_free_connection(ngx_connection_t *c)
     }
 }
 
-
+/* 关闭连接对象 */
 void
 ngx_close_connection(ngx_connection_t *c)
 {
@@ -1295,6 +1295,7 @@ ngx_close_connection(ngx_connection_t *c)
         ngx_delete_posted_event(c->write);
     }
 
+    /* 设置读写事件为关闭状态 */
     c->read->closed = 1;
     c->write->closed = 1;
 
@@ -1305,12 +1306,14 @@ ngx_close_connection(ngx_connection_t *c)
     ngx_free_connection(c);
 
     fd = c->fd;
+    /* 重置套接字 */
     c->fd = (ngx_socket_t) -1;
 
     if (c->shared) {
         return;
     }
 
+    /* 关闭套接字 */
     if (ngx_close_socket(fd) == -1) {
 
         err = ngx_socket_errno;

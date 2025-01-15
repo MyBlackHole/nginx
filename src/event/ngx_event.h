@@ -101,6 +101,7 @@ struct ngx_event_s {
     int              available;
 
     /*
+     * 事件发生时的回调函数指针
      * ngx_event_accept
      * ngx_event_recvmsg
      *
@@ -131,6 +132,7 @@ struct ngx_event_s {
 
     ngx_log_t       *log;
 
+    /* 事件关联的定时器节点 */
     ngx_rbtree_node_t   timer;
 
     /* the posted queue */
@@ -424,6 +426,7 @@ extern ngx_uint_t            ngx_use_epoll_rdhup;
 /* ngx_epoll_add_event */
 #define ngx_add_event        ngx_event_actions.add
 #define ngx_del_event        ngx_event_actions.del
+/* ngx_epoll_add_connection */
 #define ngx_add_conn         ngx_event_actions.add_conn
 #define ngx_del_conn         ngx_event_actions.del_conn
 /* ngx_epoll_notify */
